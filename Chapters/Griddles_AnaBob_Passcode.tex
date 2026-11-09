@@ -1,0 +1,719 @@
+\chapter{Code Mode: The Ana Bob Password Guessing Game}
+
+\noindent
+Author: Ivelina Mladenova.
+\noindent
+Personal Email: ivelina.p.mladenova@gmail.com
+
+% \noindent
+% Work Email: ahw864@qmul.ac.uk 
+
+\noindent
+Problem: \href{https://www.gresearch.com/griddles/series-b-puzzle-4/}{GRiddles Series B: Puzzle 4}.
+\begin{resultbox}
+
+\textbf{Summary Answer}
+
+\begin{enumerate}[label=(\arabic*)] 
+
+\item $\mathbf{\ell = }2 $ \textbf{is sufficient}: Regardless of what public sequence $(a_n)_{n\ge 1}$ Bob announces or what path he plays, choosing some fixed target $q = 1 + \sum_{i=1}^{T_1} a_i$ and guarding both predecessors (passcode values that must happen before passcode $q$ happens) $\{q - a_{n+1}, \, q + a_{n+1}\}$ on active turns guarantees Ana a win in all cases, possibly at infinite time. Not at a finite amount of games. \\ No \(\ell=2\) strategy guarantees a finite-time win.
+
+\item $\mathbf{\ell = } 1$ \textbf{is Hard}: so far I have not been able to find a counter-example that it would not work, nor proof, if it will could work. \\ My write-up for this includes some trial ideas, that lead me to nowhere (in the finite time I spent working on this without GPT Astra Pro...).
+
+
+% \item $\mathbf{\ell = } 1$ \textbf{is Conditionally Sufficient}: If Bob's chosen public sequence $(a_n)_{n \ge 1}$ leaves an unvisited target passcode $q$ for all possible paths Bob can construct with his sequence, and if the smaller jump sizes $\{1, \dots, q - 1\}$ are already exhausted (e.g., Bob leaves passcode $q = 1$ unvisited, forcing a turn $1 - a_{n+1} \le 0$), then the lower predecessor passcode is permanently illegal. Under these specific conditions, Ana only ever faces the single predecessor $q + a_{n+1}$ and wins with $\ell = 1$.
+\end{enumerate}
+\end{resultbox}
+
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+\section{Definitions \& Setup}
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+
+%%%% ------------------
+\begin{definition}{Bob Path \& Rules}{def:bob-path}
+Let $(a_n)_{n \ge 1}$ be a publicly announced sequence chosen by Bob, such that it is a permutation of the positive integers $\mathbb{Z}^+$. Bob constructs a sequence of secret passcodes $(S_n)_{n \ge 0}$ satisfying the following conditions for all $n \ge 1$: 
+
+\begin{enumerate}[label=B\arabic*,ref=B\arabic*]
+
+\item \label{def:bob-path-rules-init} Initialization: $S_0 = 0$
+
+\item \label{def:bob-path-rules-recursion} Recursion: $S_n = S_{n-1} \pm a_n$, where Bob privately chooses the sign at each step.
+
+\item \label{def:bob-path-rules-positivity} Positivity: $S_n > 0$
+
+\item \label{def:bob-path-rules-Uniqueness} Uniqueness: $S_n \notin \{S_1, \dots, S_{n-1}\}$. 
+\end{enumerate}
+
+\end{definition}
+
+\begin{remark}\label{remark:bob-rules-initial-passcode} It immediately follows from \ref{def:bob-path-rules-init}, \ref{def:bob-path-rules-recursion}, and \ref{def:bob-path-rules-positivity} that at $n=1$, the passcode is strictly forced to be $S_1 = a_1$, requiring the positive sign choice. 
+\end{remark}
+
+\begin{remark}\label{remark:bob-rules-bob-win} For Bob to win, his constructed path $(S_n)_{n \ge 1}$ must be a valid permutation of $\mathbb{N}$, meaning he eventually visits every positive integer without violating \ref{def:bob-path-rules-init} - \ref{def:bob-path-rules-Uniqueness}.
+\end{remark}
+
+%%%% ------------------
+\begin{definition}{Ana's Guesses}{def:ana-path}
+Let $N_0 := 2026^{2026^{2026}}$ denote the mandatory waiting period before Ana is permitted to play. Ana's guessing turns are defined as the sequence $T_j := N_0 + j$, for $j \in \mathbb{Z}_{\ge 1}$. On each active turn $T_j$, Ana selects a guess set $G_{T_j}$ subject to the following rules: 
+
+\begin{enumerate}[label=A\arabic*,ref=A\arabic*] 
+\item \label{def:ana-guesses-rules-Capacity} Capacity: $\vert{}G_{T_j}\vert{} \le l$, where $l \in \mathbb{Z}_{\ge 0}$ is the strict maximum number of guesses allowed per turn. 
+
+\item \label{def:ana-guesses-rules-non-repetition} Non-Repetition: Ana may never repeat a guess used on an earlier turn. For any subsequent turn $T_{j+1}$ (where $j \ge 1$), her guess set is restricted by:
+  % $$G_{T_{j+1}} \subseteq \mathbb{N} \setminus \bigcup_{i=1}^{j} G_{T_i}$$.
+  $$G_{T_{j+1}} \cap \left( \bigcup_{i=1}^{j} G_{T_i} \right) = \emptyset$$.
+\end{enumerate}
+\end{definition}
+
+\begin{remark}\label{remark:ana-rules-domain-of-guesses} 
+By Conditions \ref{def:bob-path-rules-init}, \ref{def:bob-path-rules-recursion}, and \ref{def:bob-path-rules-positivity}, Bob's passcode $S_n$ is formed by integer addition and subtraction and must remain strictly positive. Therefore, every valid passcode $S_n \in \mathbb{N}$. Consequently, the domain for Ana's guesses is $G_{T_j} \subseteq \mathbb{N}$, as any guess outside the positive integers would be incorrect. Thus, Ana's non-repeating constraint can be explicitly written as $G_{T_{j+1}} \subseteq \mathbb{N} \setminus \bigcup_{i=1}^{j} G_{T_i}$. 
+\end{remark}
+
+%%%% ------------------
+\begin{definition}{Game Progression}{def:game-progression}
+At each guessing turn $T_j$, we evaluate Ana's guess set $G_{T_j}$ against Bob's passcode $S_{T_j}$: 
+
+\begin{enumerate}[label=G\arabic*,ref=G\arabic*]
+
+\item \label{def:game-progression-hit} \textbf{Hit}: If there exists a $j$ such that $S_{T_j} \in G_{T_j}$, Ana guesses correctly, she wins, and the game ends.
+
+\item \label{def:game-progression-hit} \textbf{Miss}: If $S_{T_j} \notin G_{T_j}$, all of Ana's guesses at time $T_j$ are incorrect. The game proceeds to the next turn $T_{j+1}$, where:
+
+\begin{enumerate}[label=(\arabic*)]
+    \item Bob updates his passcode $S_{T_{j+1}}$ according to \ref{def:bob-path-rules-init} - \ref{def:bob-path-rules-Uniqueness}.
+    \item Ana selects a new guess set $G_{T_{j+1}}$ subject to \ref{def:ana-guesses-rules-Capacity} - \ref{def:ana-guesses-rules-non-repetition}.
+\end{enumerate}
+\end{enumerate}
+\end{definition}
+
+
+%%%% ------------------
+\begin{definition}{End Game}{def:game-outcomes}
+Fix Bob's public permutation $a = (a_n)_{n \ge 1}$. The game can end in exactly one of the following four ways: 
+
+\begin{enumerate}[label=E\arabic*,ref=E\arabic*] 
+
+\item \label{end:bob-breaks} \textbf{Bob breaks his rules} $\Longrightarrow$ \textbf{Ana wins:} Bob repeats a positive integer, enters a non-positive state, or otherwise violates any of the conditions in \ref{def:bob-path-rules-init} - \ref{def:bob-path-rules-Uniqueness}.
+
+\item \label{end:ana-hits} \textbf{Ana hits the passcode} $\Longrightarrow$ \textbf{Ana wins:} There exists a guessing turn $T_j$ (for some $j \ge 1$) such that Ana correctly identifies Bob's current passcode, i.e., $S_{T_j} \in G_{T_j}$. 
+
+\item \label{end:ana-breaks} \textbf{Ana breaks her rules} $\Longrightarrow$ \textbf{Bob wins:} Ana repeats one of her previous guesses or otherwise violates her conditions \ref{def:ana-guesses-rules-Capacity} - \ref{def:ana-guesses-rules-non-repetition}.
+
+\item \label{end:infinite-play} \textbf{Infinite Bob Evasion} $ \Longrightarrow $  \textbf{Bob wins:} Bob successfully constructs an infinite sequence $(S_n)_{n \ge 0}$ that satisfies conditions \ref{def:bob-path-rules-init} - \ref{def:bob-path-rules-Uniqueness} and forms a permutation of $\mathbb{N}$, while ensuring $S_{T_j} \notin G_{T_j}$ for every $j \in \mathbb{Z}_{\ge 1}$. The game continues indefinitely without either player violating the rules but Ana never guesses Bob's passcode. 
+\end{enumerate}
+\end{definition}
+
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+\section{Bob's Infinite Paths \& Game Continuation}
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+
+\subsection{Literature Review}
+
+The literature\footnote{The literature discussed does not reflect the full literature available on the problem. I merely write about papers that I have been able to find in a short amount of time.} on constructing sequences that satisfy Bob's conditions describe the problem as a \textit{graceful n-permutation}. Some of the papers constructing such sequences can be summarised as follows:
+
+
+\begin{enumerate}[label=(\Roman*)] 
+
+\item \label{literature:rosa-golomb-cahit} The underlying idea behind graceful permutations originates from Rosa’s $\beta$-valuations in \cite{rosa1967valuations}, which used an \textbf{alternating "zig-zag" labels for finite paths}. Golomb introduced the term \textit{graceful labeling} in \cite{golomb1972number}. Later, Cahit used the term \textit{graceful permutation} for the labeling problem on paths in \cite{cahit1977graceful}.
+
+ \item \label{literature:slater1977permutations} \cite{slater1977permutations}: Provides a direct permutation construction algorithm. The algo proves that any finite sequence of integers that follows their \textbf{Property 1} can be extended indefinitely with their \textbf{Rule 1}. A shifted form of their "Rule 1", adapted for Bob's starting condition $S_0 = 0$, is shown in Appendix \ref{app:slater-velez}. Their paper was answering questions by Roger Entringer at the University of New Mexico.
+
+ % \item \label{literature:chan2009graceful} \cite{chan2009graceful} extend graceful labelling to countably infinite graphs. They shows that an infinite tree, or path, can be labelled with the natural numebers $\mathbb{N}$. Their method is graph-theoretic and much more general than just paths. 
+
+ % Zig-zag Constructions: Alternative explicit methods utilizing alternating high-low bounds offer Bob additional deterministic strategies to construct infinite paths without repeating states or differences.
+\end{enumerate}
+
+\subsection{First lower bound result for $\ell$}
+
+The literature above helps us answer the question:
+
+\begin{questionbox}
+\textbf{Question 1.2.1}
+Can Bob keep the game alive for at least $N_0$ turns, so that Ana eventually reaches her first guessing turn?
+\end{questionbox}
+
+Yes. Bob can use the construction provided by \cite{slater1977permutations}. By applying the $S_0 = 0$ adaptation from Appendix \ref{app:slater-velez}, setting $\widetilde{S}_{n+1} = S_n + 1$, and fixing a valid finite public sequence $(a_n)_{n \ge 1}$ and passcode sequence $(S_n)_{n \ge 1}$ that satisfy Property 1 of their paper. Theorem 2 of \cite{slater1977permutations} can then be applied to extend this finite prefix into an infinite sequence. 
+
+Consequently, Bob can construct at least one legal infinite sequence from any valid starting move. Because the path that he constructs with Rule 1 would be infinite, it contains a "legal" finite prefix $S_0, S_1, \ldots, S_{N_0}$ of length $N_0 := 2026^{2026^{2026}}$. Therefore, Bob can keep the game alive for at least $N_0$ turns, guaranteeing that the game reaches the first turn on which Ana is permitted to guess.
+
+
+% \begin{resultbox}
+% \textbf{Corollary 1.3.1 (Infinite Extension):}
+% Every finite legal path constructed by Bob can be extended to an infinite legal path for which both the passcodes $(S_n)_{n\geq1}$ and the jumps $(a_n)_{n\geq1}$ are permutations of $\mathbb{N}$.
+% \end{resultbox}
+
+\begin{corollary}{Infinite Extension}{corollary:inf-extension}
+\label{cor:inf-extension}
+Every finite legal path constructed by Bob can be extended to an infinite legal path for which both the passcodes $(S_n)_{n\geq1}$ and the jumps $(a_n)_{n\geq1}$ are permutations of $\mathbb{N}$.
+\end{corollary}
+
+
+% \begin{remark}
+This has a direct implication on the game's termination conditions. According to Outcome \ref{end:bob-breaks}, Ana wins if Bob violates his sequence conditions (e.g. repeating a state or entering a non-positive state). However, the corollary guarantees that Bob always possesses a valid continuation (given he is aware of the construction mechanism which we assume he would be in order to win the game). In that case, Ana cannot win by passively waiting for Bob to exhaust his legal moves. She must actively use her guesses to prune his decision tree and force a contradiction.
+% \end{remark}
+
+\begin{lemma}{Lower Bound on Guess Capacity}{lemma:lower-bound-ell-above-zero} \label{lemma:lower-bound-ell-above-zero}
+For Ana to have a guaranteed winning strategy, her maximum number of guesses per turn must satisfy $l \ge 1$.
+\end{lemma}
+
+\begin{proof}
+Assume (for the contradiction) that Anna can win with $l = 0$. By definition, Ana's guess set on any active turn is empty, meaning $G_{T_j} = \emptyset$ for all $j \ge 1$. By Corollary \ref{cor:inf-extension}, Bob can construct an infinite sequence $(S_n)_{n \ge 0}$ that satisfies all his rules and visits every positive integer. Since Ana makes no guesses, and therefore $S_{T_j} \notin G_{T_j}$ is satisfied for all $T_j$. Thus, Bob continues indefinitely without violating any of his conditions, ending the game in Infinite Evasion (Outcome \ref{end:infinite-play}) and winning. Therefore, $l = 0$ does not guarantee a win for Ana, requiring $l \ge 1$.
+\end{proof}
+
+\noindent
+\ul{\textbf{Note: Hybrid Passcode \& Sequence Constructions}}
+
+\noindent
+Because the Slater-Vélez algorithm only requires a finite prefix to satisfy Property 1 (distinct passcodes and distinct jumps), Bob is not restricted to a single methodology.
+
+For example, Bob can play a \textit{zig-zag pattern} from \cite{rosa1967valuations} for his first 100 (or $N_0$) moves. Because this finite zig-zag prefix contains no repeated passcodes or jumps and it satisfies Property 1 in \cite{slater1977permutations}, it allows Bob to transition to the Slater-Vélez "Rule 1" algorithm to extend his path infinitely. Ana will not know exactly when that switch happens since the passcode sequence is hidden. 
+
+
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+\section{Ana's Strategy Proposal \& Main Results}
+%%%%%%%%%%%%%%% --------------- %%%%%%%%%%%%%%%
+
+Because Bob's jump sequence $(a_n)_{n \ge 1}$ is public, Ana knows exactly how far Bob must jump on any given turn. So, a strategy for Ana is to identify an unvisited target passcode (or multiple passcodes) \(q \in \mathbb{Z^+}\) and block Bob from ever reaching it. 
+
+%% ------------------------------------------------ $$
+\subsection{The Guarding Mechanism for Trapping Bob}
+
+At any turn $n$, Bob's next jump size is fixed at $a_{n+1}$. Therefore, there are at most two possible current states from which Bob could legally jump into a fixed target $q$:
+  $$S_n = q - a_{n+1} \quad \text{or} \quad S_n = q + a_{n+1}$$  
+Ana uses her guesses to "guard" these predecessor passcodes that must happen before her target passcode. She does not need to guess the exact passcode itself, just the values before it that must eventually lead to passcode $q$. If she guesses these predecessor states, she creates a threat: \textbf{\textit{If Bob ever puts himself in a position from which his next forced jump lands on $q$, Ana catches him first}}.
+
+
+If Ana successfully guards all legal entrances to $q$ on every guessing turn, Bob can never visit $q$ without being "hit" beforehand. Consequently, his sequence $(S_n)_{n \ge 1}$ can never be a permutation of $\mathbb{N}$, guaranteeing a win for Ana (Either by game outcome \ref{end:bob-breaks} or \ref{end:ana-hits}). Now that we have a strategy, we need to prove that it works and find the number of guesses $l$ Ana requires per turn. That depends on how she selects $q$ and how Bob costructs his jump sequence.
+
+\noindent
+\ul{\textbf{Intuitive Example of Guard Mechanism}}
+
+\noindent
+Suppose that Ana has chosen the target passcode $q = 100$ which she is certain that Bob has not visited before. She knows Bob's next sequence term (or jump size) is (for example) $a_{n+1} = 17$. The only way Bob could legally reach $100$ on turn $n+1$ is if his current passcode is either $S_n = 83$ or $S_n = 117$.
+
+% \label{end:ana-hits} or \label{end:bob-breaks}
+
+Therefore, Ana sets her guesses for the current turn to exactly those \textit{\textbf{predecessors}}: $G_n = \{83, 117\}$. If Bob is at either $83$ or $117$, Ana guesses correctly and wins by condition \ref{end:ana-hits}. If both guesses are wrong, hence Bob is at neither passcode, meaning his next $\pm 17$ move cannot possibly land on $q = 100$. 
+
+\noindent
+The idea of only picking $1$ unused passcode sounds good so far, but to prove it works, we must answer some questions:
+\begin{questionbox}
+\textbf{Question 1.3.1}
+How does Ana dynamically choose the fixed target value $q$ to ensure Bob has not already visited it?
+\end{questionbox}
+
+\begin{questionbox}
+\textbf{Question 1.3.2}
+If Ana identifies a fixed targeted passcode $q$, can she ensure that her guesses follow the Non-Repetition rule in \ref{def:ana-guesses-rules-non-repetition}?
+\end{questionbox}
+
+\begin{questionbox}
+\textbf{Question 1.3.3}
+If Ana identifies a valid target passcode $q$, does guarding it strictly guarantee a win, and what is the minimum guess capacity $l$ required to maintain this trap?
+\end{questionbox}
+
+
+%% ------------------------------------------------ $$
+\subsection{Unconditional Sufficiency for $l=2$}
+
+We can resolve all three of the questions above by defining an upper bound for Ana's target passcode $q$.
+
+\begin{proposition}{Sufficiency of $l=2$}{proposition:sufficiency-l-2} \label{prop:sufficienty-l=2}
+Let $(a_n)_{n \ge 1}$ be any fixed public permutation of $\mathbb{N}$ chosen by Bob. For $l=2$ and a target guess passcode: $q = 1 + \sum_{i=1}^{N_0} a_i$ starting at her first guessing turn $T_1$, Ana has a strategy that guarantees a win in finite time.
+\end{proposition}
+
+\begin{proof}
+
+\textbf{Step 1: Target Selection (Resolving Q1.3.1).}
+
+\noindent
+Let $T_1 = N_0 + 1$ denote Ana's first active guessing turn. Ana computes the maximum possible passcode state Bob could occupy by this turn and strictly exceeds it by at least 1. Define her target integer as:
+$$q = 1 + \sum_{i=1}^{N_0} a_i.$$
+
+Because Bob's state is bounded by $S_{N_0} \le \sum_{i=1}^{N_0} a_i$, we have that $q > S_{N_0}$. Thus, the fixed passcode target $q \notin \{S_1, \dots, S_{N_0}\}$ regardless of Bob's internal sign choices, ensuring $q$ is strictly unvisited before Ana begins playing.
+
+% \textbf{Can she also maybe use the max value of the }
+
+\textbf{Step 2: The Guarding Strategy.} 
+
+\noindent
+For each turn $n \ge T_1$, Ana constructs her guess set to block both possible predecessor passcodes to $q$:
+$$G_n = \{q - a_{n+1}, q + a_{n+1}\} \cap \mathbb{N}.$$ 
+
+\noindent
+Notice this strategy has total number of guesses per turn  $|G_n| = 2$, a predecessor protecting a jump from above and one from below the target passcode $q$. 
+
+% \textbf{Step 3: Non-Repetition Guarantee (Resolving Q1.3.2).} 
+% To ensure Ana never violates the Non-Repetition rule \ref{def:ana-guesses-rules-non-repetition}, observe that Bob's sequence $(a_n)_{n \ge 1}$ is a permutation of the positive integers. Consequently, every jump size $a_n$ is strictly unique. For any two distinct turns $n \neq m$, we have $a_{n+1} \neq a_{m+1}$. 
+% Therefore, the distances from the fixed target $q$ are always unique, meaning:
+% $$\{q - a_{n+1}, q + a_{n+1}\} \cap \{q - a_{m+1}, q + a_{m+1}\} = \emptyset$$
+
+% %%%%% But is this true??? every sequential guess is the empty set but what about the condition that every new set is out of the previous guesses set?
+% Thus, $G_n \cap G_m = \emptyset$, and Ana's guesses naturally satisfy the Non-Repetition rule without any extra effort.
+
+% Do we need to use this to show that the construction satisfies the rules?
+%\cite{chan2009graceful}
+
+\textbf{Step 3: Non-Repetition Guarantee (Resolving Q1.3.2).} 
+Note that Ana never violates the non-repetition rule \ref{def:ana-guesses-rules-non-repetition}, since Bob's sequence $(a_n)_{n \ge 1}$ is a permutation of the positive integers. Consequently, every jump size $a_n$ is strictly unique as per condition \ref{def:bob-path-rules-Uniqueness}. So for any two distinct turns $n \neq m$, we have $a_{n+1} \neq a_{m+1}$. In other words, the distances from the fixed target $q$ are always unique:
+$$\{q - a_{n+1}, q + a_{n+1}\} \cap \{q - a_{m+1}, q + a_{m+1}\} = \emptyset.$$
+
+Because Ana's guess sets are pairwise disjoint across all turns, her guess set $G_n$ on any given turn will never intersect with the union of her previous guess sets. Thus, her strategy satisfies the non-repetition rule without requiring additional changes.
+
+\textbf{Step 4: Resolving Q1.3.3.} 
+If $S_n \in G_n$, Ana guesses correctly and wins by Outcome \ref{end:ana-hits}. If $S_n \notin G_n$, Bob's state is not equal to either predecessor, meaning $S_{n+1} = S_n \pm a_{n+1} \neq q$. Because Ana guards these entrances on every active turn, Bob can never jump to passcode $q$ without Ana guessing his previous passcodes first. Thus, the integer $q$ is permanently excluded from Bob's path, meaning $(S_n)_{n \ge 1}$ can never form a permutation of $\mathbb{N}$ without Bob either being caught or violating his own rules (Outcome \ref{end:bob-breaks}). Therefore, $l=2$ guarantees Ana a win.
+\end{proof}
+
+% \vspace{-0.5cm} % Adds a little breathing room after the proof
+
+\subsubsection*{The Gap Between Upper and Lower $\ell$ Bounds}
+Proposition \ref{prop:sufficienty-l=2} shows that $l=2$ is sufficient to guarantee Ana a win while lemma \ref{lemma:lower-bound-ell-above-zero} shows that $l \ge 1$ is the minimum requirement for her to have any viable strategy. The current lower and upper bounds are not identical, raising the question for Ana's strategy:
+
+\begin{questionbox}
+\textbf{Question 1.3.4}
+Is is possible to find a fixed target $q$ that Anna can defend with only one guess per turn $\ell =1$? If the fixed $q$ does exist, what conditions must Bob's public sequence satisfy to give Ana enough information about her target passcode $q$? 
+% Is it possible for Ana to win using only a single guess per turn ($l=1$), and if so, what specific sequence conditions must Bob's public sequence satisfy to allow Anna to choose a target $q$?
+\end{questionbox}
+
+%% ------------------------------------------------ $$
+%% ------------------------------------------------ $$
+%% ------------------------------------------------ $$
+\subsection{Can Ana win with $\ell=1$?}
+
+\textcolor{magenta}{This is a work in progress notes, and not my final answer. I am currently writing up a paper which I need to focus on instead. However much I want to figure this out by myself. Thank you for reading this far into my notes. (: }
+
+\vspace{5mm}
+
+To win with $\ell=1$, Ana may try to use an adapted "guarding"
+strategy. Recall that Ana guesses on each turn $T_j$ but Bob first makes his jump of size $a_{T_j}$, giving $S_{T_j}=S_{T_j-1}\pm a_{T_j}$. Ana then chooses a guess set $G_{T_j}$ with $|G_{T_j}|\leq1$ and wins if $S_{T_j}\in G_{T_j}$.
+
+Suppose Ana fixes a target $q\in\mathbb N$ and wishes to prevent Bob
+from reaching $q$ on the following turn $T_{j+1}=T_j+1$. Since
+\[
+S_{T_{j+1}}
+=
+S_{T_j}\pm a_{T_{j+1}},
+\]
+the equality $S_{T_{j+1}}=q$ is possible only if
+\[
+S_{T_j}=q-a_{T_{j+1}}
+\qquad\text{OR}\qquad
+S_{T_j}=q+a_{T_{j+1}}.
+\]
+
+\noindent
+Thus the two possible predecessors of $q$ at time $T_j$ are $q-a_{T_{j+1}}$ and $q+a_{T_{j+1}}$. With only one guess, Ana can guard only one of the two, either:
+\begin{equation}\label{eqn:ana-guess-ell1-minus}
+G_{T_j}=\{q-a_{T_{j+1}}\},
+\end{equation}
+OR
+\begin{equation}\label{eqn:ana-guess-ell1-plus}
+G_{T_j}=\{q+a_{T_{j+1}}\}.
+\end{equation}
+
+We can exploit Bob's Positivity rule \ref{def:bob-path-rules-positivity}, $S_n>0$. We can see that the upper predecessor is always admissible with respect to positivity,
+since $q>0$ and so $q+a_{T_{j+1}}>0$ too. 
+
+\noindent
+The \ul{lower predecessor} is positive only if $q-a_{T_{j+1}}>0$,  or equivalently, $a_{T_{j+1}}<q$. So we have two cases to look into: 
+
+\begin{enumerate}[label=(\textbf{Case \arabic*})]
+
+\item\label{case:large-jump}
+Suppose that the jump size is greater than the target passcode $a_{T_{j+1}}\geq q$. Then $q-a_{T_{j+1}}\leq0$, so Bob's positivity rule rules out the lower predecessor. Therefore the only possible predecessor of $q$ is $q+a_{T_{j+1}}$, and Ana can guard $q$ using the single guess
+\[
+\boxed{
+G_{T_j}=\{q+a_{T_{j+1}}\}.
+}
+\]
+
+So, in general, $ \boxed{ a_{T_j+1}\ge q \quad\Longrightarrow\quad \text{Ana needs only one guess at turn }T_j\text{ to guard }q. } $
+
+\noindent
+If this condition holds for every future guessing turn, $ a_{T_j+1}\ge q  $ for all $ j\ge1$, then Ana can guard \(q\) forever with the strategy $ \boxed{ G_{T_j}=\{q+a_{T_j+1}\}$, for $ j\ge1. } $.
+
+\noindent
+For the choice that the passcode is the fixed initial sum of the public sequence values plus one. $ q=1+\sum_{i=1}^{T_1}a_i$, a sufficient condition becomes
+
+$$ \boxed{ a_{T_j+1} \ge 1+\sum_{i=1}^{T_1}a_i \qquad\forall j\ge1. } $$
+
+Equivalently, since the quantities are integers, it is enough to have future jumps larger than the sum of the previous public sequence values:
+
+$$ \boxed{ a_{T_j+1} > \sum_{i=1}^{T_1}a_i. } $$
+
+This shows that in this special case Ana can guard $q$ with one guess per turn. But Bob will eventually try to reach $q$ and the sequence values between $a_{T_j+1}$ and $\sum_{i=1}^{T_1}a_i$, \textbf{not guaranteeing this strategy is a winning strategy for Ana.}
+
+\item\label{case:small-jump}
+Suppose that the jump size is less than the target passcode  $a_{T_{j+1}}<q$, then just like in proposition \ref{prop:sufficienty-l=2}, where both possible steps can occur:
+\[
+q-a_{T_{j+1}}>0
+\qquad\text{and}\qquad
+q+a_{T_{j+1}}>0,
+\]
+\noindent
+and Bob could potentially reach the target $q$ from either side. Thus Bob's positivity rule alone does not eliminate either predecessor in this case. Then, if Ana wants to guard \(q\) completely on that turn, she needs two guesses per turn again.
+
+For the $ q=1+\sum_{i=1}^{T_1}a_i$, the second condition becomes $a_{T_j+1} < 1+\sum_{i=1}^{T_1}a_i$. Since the quantities are integers, that's equivalent to
+
+$$ \boxed{ a_{T_j+1}\le \sum_{i=1}^{T_1}a_i. } $$
+
+If $j=1$, then $ a_{T_1+1}=\sum_{i=1}^{T_1}a_i=q-1<q$. So both predecessors are positive:
+$ q-a_{T_1+1}=1, $, and $ q+a_{T_1+1}=2q-1$. 
+
+Thus, at \(T_1\), guarding \(q\) fully would \textbf{require the two guesses}
+$$ \boxed{ G_{T_1}=\{1,\,2q-1\}. } $$
+
+So here \(\ell=1\) is not enough for the simple two-sided guarding strategy; \(\ell=2\) guards both possible predecessors.
+
+\end{enumerate}
+
+So we need to choose a slightly different strategy instead of having a fixed value to guard, we can try to prune Bob's growth but can this happen in finite time, so that in long term she can still win? 
+
+\vspace{3mm}
+
+For example, let's keep playing and explore the cumulative sums of the public sequence instead. 
+
+I don't want to equate the cumulative sum to Bob's jumps as he probably would avoid doing so, let's instead just compare the cumulative sums, the initial q value and the jumps somehow
+
+There is also an important monotonicity fact:
+
+$$ A_n=A_{T_1}+\sum_{i=T_1+1}^{n}a_i, $$
+
+so
+
+$$ A_n\ge A_{T_1}=q-1 $$
+
+and \(A_n\) keeps increasing, while \(q\) stays fixed.
+
+That means as time passes, the relationship between \(q\) and \(A_n\) becomes
+
+$$ q\ll A_n $$
+
+eventually, unless the future jumps are extremely constrained.
+
+So the interesting question becomes:
+
+$$ \boxed{\text{How often can Bob keep choosing }a_{n+1}<q?} $$
+
+Because \(q\) is fixed and Bob cannot repeat jump sizes, there are only finitely many positive integers below \(q\).
+
+\vspace{5mm}
+
+Also, what if he build a zig-zag or another sewuence in which the sequence jumps are NOT zig-zagging and have holes in them? e.g. 1, 4, 5, 6, 7, etc 
+
+Say bob uses an increasing sequence, and leaves holes that he has to come back to...e.g. 2
+
+$S_0 = 0$Jump 1 ($a=1$): $+1 \implies \mathbf{1}$. ($-1$ is illegal).Jump 2 ($a=4$): $+4 \implies \mathbf{5}$. ($-4$ is illegal).Jump 3 ($a=5$): $+5 \implies \mathbf{10}$. ($-5$ is illegal).Jump 4 ($a=6$): $+6 \implies \mathbf{16}$ or $-6 \implies \mathbf{4}$.Jump 5 ($a=7$): From $16 \implies \mathbf{23}$ or $\mathbf{9}$. From $4 \implies \mathbf{11}$. ($-3$ is illegal).Ana looks at the complete set of every possible state Bob could currently be in: $\{1, 4, 5, 9, 10, 11, 16, 23\}$.
+
+Ana immediately sets her target as $q = 2$.Bob has definitely not visited it.Bob's next jump might be, say, $10$. His lower predecessor is $2 - 10 = -8$ (illegal). Ana guards $2 + 10 = 12$.Bob's next jump might be his missing $2$. His lower predecessor is $2 - 2 = 0$ (illegal). Ana guards $2 + 2 = 4$.No matter what Bob does, his lower entrance is blocked by the positivity rule. Ana only needs $l=1$ to guard the upper entrance, and she wins easily.
+
+
+If Bob simply plays the most obvious sequence in the world—a strictly increasing sequence of natural numbers ($a_1=1, a_2=2, a_3=3, a_4=4 \dots$)—he spectacularly loses to Ana with $l=1$, only if she can spot his pattern.
+
+At turn $T_1 = 2$, Ana wakes up from her long wait... She looks at his jumps so far: $\{1, 2\}$.The smallest unplayed jump is $u = 3$. Therefore, every future jump Bob makes is $\ge 3$.She checks if Bob has visited $q=2$. He has not.She targets $q=2$.Because all future jumps are $\ge 3$, the lower predecessor for $2$ is:$$2 - a_{future} \le 2 - 3 = -1$$The lower entrance is permanently blocked. Ana uses her single guess ($l=1$) to guard the upper entrance ($2 + a_{future}$). Bob is trapped on Turn 3, and Ana wins.
+
+To survive, Bob must do the exact opposite. He has to start with a massive jump $M$, and make his jumps go down ($M, M-1, M-2 \dots$). By zig-zagging inward from the outside, he perfectly paves over every single small state ($0, M, 1, M-1, 2, M-2 \dots$) leaving absolutely zero holes for Ana to target!
+
+
+He has just used the Rosa zig-zag to perfectly tile the first block of states and jumps (say, $1$ through $M$). He has successfully blinded Ana and bypassed her $l=1$ trap. But the game isn't over—he has to keep playing forever to complete the infinite permutation of $\mathbb{N}$! Also wouldn't Ana know that he wants to make sure he has no holes and hence he will zig-zag?? Maybe she would know, but not his actual sequence of passcodes that will be hidden and it would be hard to find the 'holes', and she knows once he has done that he will likely jump to another completely unvisited, safe "buffer" state maybe even within the safe space of the very large $\sum_{i=1}^{T_1} a_i$, making the sum even larger. His sequence sum $\sum a_i$ explodes exponentially because he keeps taking those massive outward jumps.
+
+Bob could also hand the baton from the finite Zig-Zag Prefix to the infinite Slater–Vélez Algorithm (or the Chan–Cheung–Ng extension) and potentially swith between them a little too (unproved statement).
+
+....
+
+\textbf{So if we are trying to prove that Ana with \(\ell=1\) can always win, the interesting question is whether she can somehow force Bob into a situation where in finite time he gets "cornered" and in infinite time she wins. That is a much stronger condition than merely \(a_{T_1+1}>\sum_{i\leq T_1}a_i\).}
+
+\section{Summary of Game Outcomes}
+
+
+\begin{itemize}
+    \item \textbf{For $l = 0$ (Passive Ana):} Bob wins. By Corollary 1.3.1, Bob can utilise a finite prefix and the Slater-Vélez algorithm to construct a valid, infinite graceful path. Ana cannot win by simply waiting for Bob to make a mistake, unless Bob hasn't prepared himself before the Ana started playing.
+    \item \textbf{For $l \ge 2$ (Ana's Guards):} Ana wins, possibly in infinite time when Bob couldn't follow his rules.
+    \item \textbf{For $l = 1$ (The Bugger):} I am not sure yet. 
+    \item \textbf{Final question: what is the value of $\ell$ if Ana wants to win in finite time?}
+\end{itemize}
+
+
+
+% \newpage
+
+
+% but ana does not have the information about Bob's previously visited states, only the sequence a_n which is the absolute different of the states.. and bob chooses the sign.. she has no idea so step 3 is wrong.  she can either find the values from above if Bob used the zigzag or similar method, he used all values from 1 to N_0 for constructing both the jumps and pass codes, but she wouldn't know that he was using zig-zagging anyway because she doesn't know his passcode path. She can only  just add all the jumps together it's still a large number or check which is the minimum integer above the largest jump and make that q and hope that he hasn't visited it somehow -- she would have to check if the minimum integer above the largest jump is one if the possible states Bob visits given his finite sequence. How can she do that? and oppositely if he has gone through all the integers from 1 to N_0, her turn, then she can never know for sure that he hasn't visited the minimum integer above the largest jump because if you add the integers sequentially, they will go through every possible path no, leaving no holes no?
+
+% \newpage
+
+% \section{The $l=1$ Endgame and Information Asymmetry}
+
+% While Proposition 2 establishes that Ana can win with $l=1$ if she finds a safe target $q \le a_{n+1}$, executing this strategy requires confronting a severe informational asymmetry. Ana knows the public jump sequence $(a_k)_{k \ge 1}$, but she does not know Bob's private sign choices. Therefore, she does not know Bob's actual path $(S_k)_{k \ge 1}$. 
+
+% \begin{remark}[The Reachability Problem]
+% To guarantee Condition (C1) is satisfied (that $q$ is strictly unvisited), Ana cannot simply pick a small integer just above the maximum used jump. Bob's states are formed by subset sums of the sequence $(a_k)_{k=1}^{T_1}$. Because Bob can toggle signs, the set of states he could potentially occupy is vast. If Ana picks a small $q$, there is a risk Bob has already visited it, invalidating her trap. 
+
+% To achieve absolute certainty, Ana is forced to choose a target strictly greater than the maximum possible sequence sum: 
+% $$q = 1 + \sum_{i=1}^{T_1} a_i$$
+% \end{remark}
+
+% \begin{theorem}[Bob's Evason of the $l=1$ Trap]
+% Because Ana must choose $q > \sum_{i=1}^{T_1} a_i$ to guarantee it is unvisited, she can only reduce her guarding set to a single element (Condition C2) if Bob's next forced jump satisfies:
+% $$a_{T_1+1} > \sum_{i=1}^{T_1} a_i$$
+% Therefore, if Bob chooses a sequence of jumps that grows polynomially rather than exponentially---such as the natural numbers $1, 2, 3, \dots, n$ generated by a zig-zag construction---he mathematically denies Ana the ability to use $l=1$. Ana's safe target $q$ will always yield a positive lower predecessor ($q - a_{T_1+1} > 0$), forcing her to guard both entrances and requiring $l=2$. 
+% \end{theorem}
+
+
+% SOOO, what if he build a zig-zag or another sequence in which the sequence jumps are NOT zig-zagging and have holes in them? e.g. 1, 4, 5, 6, 7, etc 
+
+
+
+
+
+\newpage
+\appendix
+\chapter{Appendix}
+\label{app:slater-velez}
+% \section{Shifted Rule 1 Slater--Vélez construction}
+
+% Suppose Bob has already constructed a finite legal path $0=S_0,S_1,\ldots,S_t, $ so that the passcodes $S_1,\ldots,S_t$
+% are distinct and the jumps $a_n=|S_n-S_{n-1}|,$ for $ 1\leq n\leq t,$ are also distinct.
+% \vspace{3mm}
+
+% \noindent
+% Define
+% \begin{align}
+%     p_t
+%     &:=\min\bigl(
+%         \mathbb N\setminus\{S_1,\ldots,S_t\}
+%        \bigr),
+%        &&\text{smallest unused passcode},\\
+%     q_t
+%     &:=\min\bigl(
+%         \mathbb N\setminus\{a_1,\ldots,a_t\}
+%        \bigr),
+%        &&\text{smallest unused jump},\\
+%     M_t
+%     &:=\max\{S_0,S_1,\ldots,S_t\}.
+% \end{align}
+
+% \noindent
+% Under the shift $S_n= \widetilde S_{n+1}-1$, Rule~1 of
+% \cite{slater1977permutations} becomes
+% \begin{equation}
+%     \boxed{S_{t+1}=2M_t+2,}
+% \end{equation}
+% followed by
+% \begin{equation}
+%     \boxed{
+%     S_{t+2}
+%     =
+%     \begin{cases}
+%         S_{t+1}-q_t,
+%             & q_t\leq p_t+1,\\[2mm]
+%         p_t,
+%             & q_t>p_t+1.
+%     \end{cases}}
+% \end{equation}
+
+% The term $S_{t+1}$ is chosen sufficiently far above all previously
+% visited passcodes.  The second step then either introduces the smallest
+% unused jump $q_t$, or visits the smallest unused passcode $p_t$.
+% Repeated application of this rule therefore eventually introduces
+% every positive integer both as a passcode and as a jump.
+
+
+% \newpage
+
+\section{Shifted Rule 1 of the Slater--Vélez construction}
+
+ % We need to adapt the construction of
+% \cite{slater1977permutations}, since Bob's game starts from $S_0=0$. Take the construction in the paper to begin at $\widetilde S_1=1$ and shift every passcode down by $1$
+
+We adapt Rule~1 of Slater--Vélez \cite{slater1977permutations}
+to the convention that Bob's path begins at $S_0=0.$
+
+Let $ \widetilde S_1,\widetilde S_2,\ldots $ denote the original Slater--Vélez sequence, whose terms are positive integers. Take the construction in the paper to begin at $\widetilde S_1=1$ and shift every passcode down by $1$
+\begin{equation}
+    S_n:=\widetilde S_{n+1}-1,
+    \qquad n\geq 0.
+\end{equation}
+% \vspace{-2mm}
+Then $S_0=\widetilde S_1-1=0$ and $ \widetilde S_{n+1}=S_n+1$. Since $(\widetilde S_k)$ is a permutation of $\mathbb N$ and $\widetilde S_1=1$, the remaining terms $\widetilde S_2,\widetilde S_3,\ldots$ are precisely the integers $2,3,\ldots$ in some order. Hence, our passcodes $S_1,S_2,\ldots$ are also the positive integers in some order.
+% Thus $ \widetilde S_{n+1}=S_n+1. $
+% \vspace{4mm}
+
+Suppose that the construction has reached some term time $t$, e.g $ S_0,S_1,\ldots,S_t.$
+Define the corresponding jumps by
+\begin{equation}
+    a_n:=|S_n-S_{n-1}|,
+    \qquad 1\leq n\leq t,
+\end{equation}
+and set
+\begin{align}
+M_t
+&:=
+\max\{S_0,S_1,\ldots,S_t\}
+\\
+p_t
+&:=
+\min\Bigl(
+\mathbb N\setminus\{S_1,\ldots,S_t\}
+\Bigr),
+&&\text{smallest unused passcode},
+\\
+q_t
+&:=
+\min\Bigl(
+\mathbb N\setminus\{a_1,\ldots,a_t\}
+\Bigr),
+&&\text{smallest unused jump}.
+\end{align}
+
+\subsection*{Relation with the original Slater--Vélez quantities}
+
+For the unshifted sequence define
+\begin{align}
+\widetilde M_t
+&:=
+\max_{1\leq k\leq t+1}\widetilde S_k,
+\\
+\widetilde p_t
+&:=
+\min\Bigl(
+\mathbb N
+\setminus
+\{\widetilde S_1,\ldots,\widetilde S_{t+1}\}
+\Bigr),
+\\
+\widetilde q_t
+&:=
+\min\Bigl(
+\mathbb N
+\setminus
+\{
+|\widetilde S_{k+1}-\widetilde S_k|
+:1\leq k\leq t
+\}
+\Bigr).
+\end{align}
+
+\noindent
+Since $\widetilde S_{n+1}=S_n+1,$ the maxima satisfy
+\begin{equation}
+\widetilde M_t
+=
+\max_{0\leq n\leq t}(S_n+1)
+=
+M_t+1.
+\end{equation}
+
+\noindent
+Moreover, adding \(1\) to every passcode translates the set of unused
+passcodes by \(1\). Hence $\widetilde p_t=p_t+1.$
+
+\noindent
+The shift does not change any jump size, since
+\[
+|\widetilde S_{n+1}-\widetilde S_n|
+=
+|(S_n+1)-(S_{n-1}+1)|
+=
+|S_n-S_{n-1}|
+=
+a_n.
+\]
+Therefore $\widetilde q_t=q_t.$
+
+\vspace{-4mm}
+\subsection*{Shifted form of Rule 1}
+
+\vspace{-3mm}
+
+In the original construction, Rule~1 first sets
+\begin{equation}
+    \widetilde S_{t+2}
+    =
+    2\widetilde M_t+1.
+\end{equation}
+Using \(\widetilde M_t=M_t+1\), we obtain
+\begin{align}
+S_{t+1}
+&=
+\widetilde S_{t+2}-1
+\\
+&=
+2\widetilde M_t
+\\
+&=
+2(M_t+1)
+\\
+&=
+2M_t+2.
+\end{align}
+Thus the first shifted step is
+\begin{equation}
+\boxed{
+S_{t+1}=2M_t+2.
+}
+\end{equation}
+
+\noindent
+For the second step, the original Rule~1 distinguishes according to
+whether $\widetilde q_t\leq \widetilde p_t.$
+Since $\widetilde q_t=q_t$ and $\widetilde p_t=p_t+1$, this is equivalent to $q_t\leq p_t+1.$
+
+Therefore we have that 
+\begin{align}
+S_{t+2}
+&=
+\widetilde S_{t+3}-1
+\\
+&=
+\begin{cases}
+\bigl(2\widetilde M_t+1-\widetilde q_t\bigr)-1,
+& \widetilde q_t\leq \widetilde p_t,
+\\[2mm]
+\widetilde p_t-1,
+& \widetilde q_t>\widetilde p_t,
+\end{cases}
+\\[2mm]
+&=
+\begin{cases}
+2M_t+2-q_t,
+& q_t\leq p_t+1,
+\\[2mm]
+p_t,
+& q_t>p_t+1,
+\end{cases}
+\\[2mm]
+&=
+\begin{cases}
+S_{t+1}-q_t,
+& q_t\leq p_t+1,
+\\[2mm]
+p_t,
+& q_t>p_t+1.
+\end{cases}
+\end{align}
+
+Therefore the shifted form of Rule~1 is
+\begin{equation}
+\boxed{
+\begin{aligned}
+S_{t+1}&=2M_t+2,\\[1mm]
+S_{t+2}
+&=
+\begin{cases}
+S_{t+1}-q_t,
+& q_t\leq p_t+1,
+\\[2mm]
+p_t,
+& q_t>p_t+1.
+\end{cases}
+\end{aligned}}
+\end{equation}
+
+% \section{Sufficiency of the Zig-Zag Construction \cite{rosa1967valuations} for Property 1 of \cite{slater1977permutations}}
+
+% Lemma: A finite zig-zag construction (equivalent to Rosa's graceful labeling of a path graph) of length $t$ generates distinct passcodes and distinct jumps, thereby satisfying Property 1 of the Slater-Vélez construction.
+
+% Proof:Let us construct a zig-zag sequence of passcodes $(S_k)_{k=0}^t$ for a fixed integer $t \ge 1$. We define the sequence by alternating between the smallest available integers and the largest available integers up to $t$:$$S_k = \begin{cases} \frac{k}{2}, & \text{if } k \text{ is even,} \\ t - \frac{k-1}{2}, & \text{if } k \text{ is odd.} \end{cases}$$First, we prove that the passcodes $S_0, \dots, S_t$ are distinct, which satisfies the first condition of Property 1.  The even indices $k$ generate the sequence of values $0, 1, 2, \dots, \lfloor \frac{t}{2} \rfloor$.The odd indices $k$ generate the sequence of values $t, t-1, t-2, \dots, \lfloor \frac{t}{2} \rfloor + 1$.Because the values generated by the even indices and the odd indices occupy completely disjoint intervals, their union forms the exact set of integers $\{0, 1, \dots, t\}$. Therefore, all $t+1$ passcodes are strictly distinct.Second, we prove that the jumps $a_k = \vert{}S_k - S_{k-1}\vert{}$ for $1 \le k \le t$ are distinct, which satisfies the second condition of Property 1.
+% If $k$ is odd, the consecutive jump is:
+%   $$a_k = \left\vert{} \left(t - \frac{k-1}{2}\right) - \frac{k-1}{2} \right\vert{} = t - k + 1$$If $k$ is even, the consecutive jump is:$$a_k = \left\vert{} \frac{k}{2} - \left(t - \frac{k-2}{2}\right) \right\vert{} = \left\vert{} k - 1 - t \right\vert{} = t - k + 1$$In both cases, the jump size at step $k$ simplifies exactly to $a_k = t - k + 1$. As $k$ increments from $1$ to $t$, the jump size $a_k$ strictly decrements from $t$ down to $1$. This guarantees that the sequence of differences perfectly forms the set $\{1, 2, \dots, t\}$ without repetition.Because the finite sequence $(S_k)_{k=0}^t$ yields entirely distinct passcodes and entirely distinct jump sizes, it rigorously satisfies Property 1. Consequently, Bob can construct a valid finite prefix using this zig-zag method and subsequently apply Theorem 2 of Slater and Vélez to extend it into an infinite path.

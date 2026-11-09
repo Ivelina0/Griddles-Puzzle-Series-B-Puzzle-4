@@ -1,0 +1,296 @@
+% -------------------------
+% Page layout and typography
+% -------------------------
+\usepackage[a4paper,inner=26mm,outer=26mm,top=30mm,bottom=32mm,headheight=15pt]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{iftex}
+\usepackage{soul}
+
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{newtxtext,newtxmath}
+\else
+  \usepackage{fontspec}
+  \setmainfont{Libertinus Serif}
+  \setsansfont{Libertinus Sans}
+  \setmonofont{Libertinus Mono}
+\fi
+
+\usepackage{microtype}
+\usepackage{csquotes}
+
+% -------------------------
+\usepackage{tcolorbox}
+\newtcolorbox{questionbox}{
+    colback=RedViolet!5!white,
+    colframe=RedViolet!75!black,
+    boxrule=0.8pt,
+    arc=0pt,
+    left=6pt,
+    right=6pt,
+    top=6pt,
+    bottom=6pt
+}
+
+% resultbox
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tcolorbox}
+
+\newtcolorbox{resultbox}{
+    colback=YellowGreen!5!white,
+    colframe=YellowGreen!75!black,
+    boxrule=0.8pt,
+    arc=0pt,
+    left=6pt,
+    right=6pt,
+    top=6pt,
+    bottom=6pt
+}
+
+%%% 
+
+% \usepackage[a4paper,margin=1in]{geometry}
+% \usepackage{amsmath,amssymb,amsthm,mathtools}
+% \usepackage{booktabs}
+% \usepackage{enumitem}
+% \usepackage{hyperref}
+% \usepackage{xcolor}
+% \usepackage[most]{tcolorbox}
+
+
+% -------------------------
+% Mathematics
+% -------------------------
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm,bbm}
+% \usepackage{amssymb}
+\usepackage{commath}
+\usepackage{physics}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\numberwithin{equation}{chapter}
+
+% Common operators/macros for stochastic analysis and finance
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Corr}{Corr}
+\DeclareMathOperator{\esssup}{ess\,sup}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\SPD}{\mathbb{S}^{d}_{++}}
+\newcommand{\PSD}{\mathbb{S}^{d}_{+}}
+\newcommand{\normtwo}[1]{\left\lVert #1 \right\rVert_2}
+\newcommand{\inner}[2]{\left\langle #1,#2 \right\rangle}
+\newcommand{\rhoH}{\rho_{\mathrm{H}}}
+\newcommand{\rhoW}{\rho_{\mathrm{W}}}
+
+% \newtheorem{definition}{Definition}
+% \newtheorem{remark}{Remark}
+\usepackage{amsthm}
+\newtheorem{remark}{Remark}
+
+\usepackage{titlesec}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}
+  {}{0pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-40pt}{35pt}
+
+% \newtcolorbox{questionbox}{
+%   colback=gray!7,
+%   colframe=black!45,
+%   boxrule=0.5pt,
+%   arc=2mm,
+%   left=2mm,right=2mm,top=1.5mm,bottom=1.5mm
+% }
+
+% \newtcolorbox{resultbox}{
+%   colback=blue!4,
+%   colframe=blue!45!black,
+%   boxrule=0.5pt,
+%   arc=2mm,
+%   left=2mm,right=2mm,top=1.5mm,bottom=1.5mm
+% }
+
+% -------------------------
+% Figures, tables, floats
+% -------------------------
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf,justification=centering}
+\graphicspath{{02_figures/}}
+
+% A cleaner default for wide but not excessive mathematical plots
+\newcommand{\thesisplot}[3][0.86\textwidth]{%
+  \begin{figure}[tbp]
+    \centering
+    \includegraphics[width=#1]{#2}
+    \caption{#3}
+    \label{fig:#2}
+  \end{figure}
+}
+
+% -------------------------
+% Bibliography and references
+% -------------------------
+\usepackage[backend=biber,style=authoryear,maxcitenames=2,maxbibnames=99,giveninits=true,doi=true,url=true,isbn=false]{biblatex}
+\usepackage{xcolor}
+\definecolor{QMULBlue}{HTML}{003865}
+\definecolor{ThesisGreen}{HTML}{006B54}
+% Quiet thesis palette: pale fills, muted frames, and dark text.
+\definecolor{ThesisInk}{HTML}{2D3E50}
+\definecolor{TheoremTint}{HTML}{F0EEF7}
+\definecolor{TheoremFrame}{HTML}{9A8BB5}
+\definecolor{PropositionTint}{HTML}{EAF4F5}
+\definecolor{PropositionFrame}{HTML}{78A7B0}
+\definecolor{LemmaTint}{HTML}{EDF2F8}
+\definecolor{LemmaFrame}{HTML}{8AA2BD}
+\definecolor{DefinitionTint}{HTML}{EBF5F0}
+\definecolor{DefinitionFrame}{HTML}{76A795}
+\definecolor{AssumptionTint}{HTML}{FBF3E6}
+\definecolor{AssumptionFrame}{HTML}{C5A06B}
+\definecolor{ResultTint}{HTML}{F7EDF3}
+\definecolor{ResultFrame}{HTML}{B58BA2}
+\definecolor{ProofTint}{HTML}{F8F8F5}
+\definecolor{ProofFrame}{HTML}{A5AAA5}
+\definecolor{ProofTitle}{HTML}{E1E5E0}
+\definecolor{ContributionTint}{HTML}{EAF5F0}
+\definecolor{ContributionFrame}{HTML}{78B79A}
+\definecolor{ContributionTitle}{HTML}{CBE5D8}
+\usepackage[colorlinks=true,linkcolor=QMULBlue,citecolor=ThesisGreen,urlcolor=QMULBlue]{hyperref}
+\usepackage[nameinlink,noabbrev,capitalise]{cleveref}
+
+% Exact source helper for theorem titles, e.g.
+% \begin{theorem}{Feynman--Kac formula \thmsource{\textcite[Theorem 8.2, p.~157]{oksendal}}}{fk}
+\newcommand{\thmsource}[1]{\hfill\normalfont\footnotesize\emph{Source: #1}}
+
+% -------------------------
+% Theorems and boxed mathematical statements
+% -------------------------
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{theorems,breakable,skins}
+
+\tcbset{
+  thesisbox/.style={
+    enhanced,
+    breakable,
+    colback=TheoremTint,
+    colframe=TheoremFrame,
+    coltitle=ThesisInk,
+    fonttitle=\bfseries\fontsize{12}{14}\selectfont,
+    attach boxed title to top left={xshift=1.5mm,yshift=-1.5mm},
+    boxed title style={colback=TheoremTint,sharp corners,boxsep=0.6mm,left=0.6mm,right=0.6mm,top=0.2mm,bottom=0.2mm},
+    sharp corners=south,
+    boxrule=0.55pt,
+    boxsep=0pt,
+    left=1.2mm,right=1.2mm,top=6.2mm,bottom=1.4mm
+  }
+}
+
+\newtcbtheorem[number within=chapter,crefname={theorem}{theorems},Crefname={Theorem}{Theorems}]{theorem}{Theorem}{thesisbox}{thm}
+\newtcbtheorem[number within=chapter,crefname={proposition}{propositions},Crefname={Proposition}{Propositions}]{proposition}{Proposition}{thesisbox,colback=PropositionTint,colframe=PropositionFrame,boxed title style={colback=PropositionTint,sharp corners}}{prop}
+
+\newtcbtheorem[number within=chapter,crefname={corollary}{corollary},Crefname={Corollary}{Corollary}]{corollary}{Corollary}{thesisbox,colback=white,colframe=black,boxed title style={colback=white,sharp corners}}{lem}
+
+\newtcbtheorem[number within=chapter,crefname={lemma}{lemmas},Crefname={Lemma}{Lemmas}]{lemma}{Lemma}{thesisbox,colback=LemmaTint,colframe=LemmaFrame,boxed title style={colback=LemmaTint,sharp corners}}{lem}
+\newtcbtheorem[number within=chapter,crefname={definition}{definitions},Crefname={Definition}{Definitions}]{definition}{Definition}{thesisbox,colback=DefinitionTint,colframe=DefinitionFrame,boxed title style={colback=DefinitionTint,sharp corners}}{def}
+\newtcbtheorem[number within=chapter,crefname={assumption}{assumptions},Crefname={Assumption}{Assumptions}]{assumption}{Assumption}{thesisbox,colback=AssumptionTint,colframe=AssumptionFrame,boxed title style={colback=AssumptionTint,sharp corners}}{assump}
+\newtcbtheorem[number within=chapter,crefname={result}{results},Crefname={Result}{Results}]{result}{Result}{thesisbox,colback=ResultTint,colframe=ResultFrame,boxed title style={colback=ResultTint,sharp corners}}{res}
+
+% Boxed proof environment: use sparingly for important proofs.
+% \newtcolorbox{proofbox}[1][]{
+%   enhanced,breakable,colback=ProofTint,colbacktitle=ProofTitle,colframe=ProofFrame,coltitle=ThesisInk,title={Proof},fonttitle=\bfseries\fontsize{12.5}{15}\selectfont,boxrule=0.55pt,boxsep=0pt,left=1.2mm,right=1.2mm,top=1.8mm,bottom=1.4mm,lefttitle=1.2mm,righttitle=1.2mm,toptitle=1mm,bottomtitle=1mm,#1
+% }
+
+\newtcolorbox{proofbox}[1][]{
+  enhanced,
+  breakable,
+  colback=ProofTint,
+  colbacktitle=ProofTitle,
+  colframe=ProofFrame,
+  coltitle=ThesisInk,
+  title={Proof},
+  fonttitle=\bfseries\fontsize{12.5}{15}\selectfont,
+  attach title to upper=false,   % <- forces the title to stay in its own bar,
+                                  %    never gets prepended inline to the body text
+  boxrule=0.55pt,
+  boxsep=0pt,
+  left=1.2mm,right=1.2mm,
+  top=3mm,bottom=1.4mm,          % <- a touch more top padding so the first
+                                  %    line of the proof clearly clears the bar
+  lefttitle=1.2mm,righttitle=1.2mm,
+  toptitle=1mm,bottomtitle=1mm,
+  #1
+}
+
+% Chapter contribution summary box
+\newtcolorbox{contributionbox}[1][Chapter contributions]{
+  enhanced,breakable,colback=ContributionTint,colbacktitle=ContributionTitle,colframe=ContributionFrame,coltitle=ThesisInk,title={#1},fonttitle=\bfseries\fontsize{12.5}{15}\selectfont,boxrule=0.55pt,boxsep=0pt,left=1.2mm,right=1.2mm,top=1.8mm,bottom=1.4mm,lefttitle=1.2mm,righttitle=1.2mm,toptitle=1mm,bottomtitle=1mm
+}
+
+% Chapter epigraphs / italic quotes
+\usepackage{epigraph}
+\setlength{\epigraphwidth}{0.72\textwidth}
+\renewcommand{\epigraphflush}{center}
+\renewcommand{\textflush}{flushright}
+\renewcommand{\epigraphsize}{\small\itshape}
+\newcommand{\chapterquote}[2]{\epigraph{#1}{#2}}
+
+% -------------------------
+% Headings and page style
+% -------------------------
+\usepackage{titlesec}
+% \titleformat{\chapter}[display]
+%   {\normalfont\huge\bfseries}
+%   {\chaptertitlename\ \thechapter}{18pt}{\Huge}
+% \titlespacing*{\chapter}{0pt}{-5pt}{35pt}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\nouppercase{\leftmark}}
+\fancyhead[RO]{\small\nouppercase{\rightmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% -------------------------
+% Utility commands
+% -------------------------
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO:} #1}}
+
+
+\DeclareRobustCommand{\proofbox}[2][gray!10]{%
+\begin{tcolorbox}[   %% Adjust the following parameters at will.
+        breakable,
+        left=0pt,
+        right=0pt,
+        top=0pt,
+        bottom=0pt,
+        colback=#1,
+        %colframe=black,
+        width=\dimexpr\textwidth\relax, 
+        enlarge left by=0mm,
+        boxsep=5pt,
+        arc=0pt,outer arc=0pt,
+        ]
+        #2
+\end{tcolorbox}
+}
